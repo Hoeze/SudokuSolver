@@ -18,20 +18,34 @@
 #include <sstream>
 #include <string>
 #include <iterator>
+#include <set>
 
 using namespace std;
 
 vector<string> split(string line, string delim);
 
+struct Coordinate {
+    int x;
+    int y;
+};
+
+inline bool operator<(const Coordinate &lhs, const Coordinate &rhs) {
+    if (lhs.x < rhs.x) {
+        return true;
+    }
+    if (lhs.x == rhs.x) {
+        if (lhs.y < rhs.y) {
+            return true;
+        }
+    }
+    return false;
+}
+
 class Matrix {
 public:
-    Matrix();
+    virtual vector<int> getPossibleNumbers(int x, int y)=0;
 
-    virtual ~Matrix();
-
-    vector<int> getPossibleNumbers(int x, int y);
-
-    bool checkPos(int x, int y, int number);
+    virtual bool checkPos(int x, int y, int number)=0;
 
     /**
      * Modify this matrix at a given position
@@ -40,18 +54,60 @@ public:
      * @param number the number to modify
      * @param unset should this number be set or deleted (unset=true)
      */
-    void setPos(int x, int y, int number, bool unset);
+    virtual void addNumber(int x, int y, int number)=0;
+
+    virtual void removeNumber(int x, int y, int number)=0;
+
+    virtual void setExclusiveNumber(int x, int y, int number)=0;
+
+    virtual set<Coordinate> getUnsetSpots()=0;
+
+    virtual set<Coordinate> getSetSpots()=0;
+
     friend ostream &operator<<(ostream &os, Matrix &m);
 
-    Matrix copy();
+    virtual Matrix *copy()=0;
+};
+
+void readFileToMatrix(Matrix &m, string filename);
+
+class BitMatrix : public Matrix {
+public:
+    BitMatrix();
+
+    virtual vector<int> getPossibleNumbers(int x, int y);
+
+    virtual bool checkPos(int x, int y, int number);
+
+    /**
+     * Modify this matrix at a given position
+     * @param x the x coordinate
+     * @param y the y coordinate
+     * @param number the number to modify
+     * @param unset should this number be set or deleted (unset=true)
+     */
+    virtual void addNumber(int x, int y, int number);
+
+    virtual void removeNumber(int x, int y, int number);
+
+    virtual void setExclusiveNumber(int x, int y, int number);
+
+    virtual set<Coordinate> getUnsetSpots();
+
+    virtual set<Coordinate> getSetSpots();
+
+
+    virtual Matrix *copy();
+
+protected:
+    void updateUnsetSpots(int x, int y);
 
 private:
     uint16_t storage[COLNUM][ROWNUM];
+
+    set<Coordinate> unsetSpots;
+    set<Coordinate> setSpots;
 };
 
-
-Matrix * readFileToMatrix(string filename);
-
 #endif //SUDOKUSOLVER_MATRIX_H
-
 
