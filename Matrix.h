@@ -67,6 +67,8 @@ public:
     friend ostream &operator<<(ostream &os, Matrix &m);
 
     virtual Matrix *copy()=0;
+
+    string str();
 };
 
 void readFileToMatrix(Matrix &m, string filename);
@@ -95,7 +97,6 @@ public:
     virtual set<Coordinate> getUnsetSpots();
 
     virtual set<Coordinate> getSetSpots();
-
 
     virtual Matrix *copy();
 

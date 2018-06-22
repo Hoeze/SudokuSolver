@@ -1,19 +1,33 @@
 #include <iostream>
 #include <string>
+#include <exception>
 
 #include <queue>
 #include "Matrix.h"
 
 using namespace std;
 
+class NoPossibilitiesException : public exception {
+public:
+    const int X;
+    const int Y;
+
+    NoPossibilitiesException(int x, int y) : X(x), Y(y) {
+    }
+
+    const char *what() const noexcept {
+        stringstream ss;
+        ss << "No more possibilities for field " << this->X << ", " << this->Y;
+        char *cstr = &ss.str()[0u];
+        return cstr;
+    }
+
+};
 
 void checkPosition(Matrix &m, queue<Coordinate> &coords, int x, int y) {
     vector<int> possibleNumbers = m.getPossibleNumbers(x, y);
     if (possibleNumbers.empty()) {
-        stringstream ss;
-        ss << "No more possibilities for field " << x << ", " << y;
-        std::string s = ss.str();
-        throw s;
+        throw NoPossibilitiesException(x, y);
     } else if (possibleNumbers.size() == 1) {
         for (int i = 0; i < 9; i++) {
             if (i != x) {
@@ -68,23 +82,54 @@ void recursive_delete(Matrix &m, queue<Coordinate> &coords) {
 
 }
 
-void solve(Matrix &m) {
-    for (int x = 0; x < 9; x++) {
-        for (int y = 0; y < 9; y++) {
-            if (!m.getUnsetSpots().empty()) {
-                vector<int> possibleNumbers = m.getPossibleNumbers(x, y);
-                if (possibleNumbers.size() == 1) {
-                    auto coords = new queue<Coordinate>();
+void solveKnown(Matrix &m) {
+    set<Coordinate> *toVisit = new set<Coordinate>(m.getSetSpots());
+    for (Coordinate c: *toVisit) {
+        if (!m.getUnsetSpots().empty()) {
+            vector<int> possibleNumbers = m.getPossibleNumbers(c.x, c.y);
+            if (possibleNumbers.size() == 1) {
+                auto coords = new queue<Coordinate>();
 
-                    coords->push(Coordinate{x, y});
-                    recursive_delete(m, *coords);
+                coords->push(Coordinate{c.x, c.y});
+                recursive_delete(m, *coords);
 
-                    delete coords;
-                }
-            }else{
-                return;
+                delete coords;
             }
+        } else {
+            return;
         }
+    }
+    delete (toVisit);
+}
+
+Matrix &solve(Matrix &m) {
+    try {
+        solveKnown(m);
+    }
+    catch (NoPossibilitiesException &e) {
+        throw e;
+    }
+
+    if (!m.getUnsetSpots().empty()) {
+        cout << "Unset Spots" << endl;
+        Coordinate c = *m.getUnsetSpots().begin();
+        vector<int> possibleNumbers = m.getPossibleNumbers(c.x, c.y);
+        for (int i: possibleNumbers) {
+            Matrix *temp = m.copy();
+            temp->setExclusiveNumber(c.x, c.y, i);
+            try {
+                *temp = solve(*temp);
+            }
+            catch (NoPossibilitiesException &e) {
+                m.removeNumber(c.x, c.y, i);
+                delete (temp);
+                continue;
+            }
+            return *temp;
+        }
+        throw NoPossibilitiesException(c.x, c.y);
+    } else {
+        return m;
     }
 }
 
@@ -92,20 +137,19 @@ int main() {
     Matrix *m = new BitMatrix();
 
     try {
-        readFileToMatrix(*m, "Sudoku_leicht.txt");
+        readFileToMatrix(*m, "Sudoku_schwer.txt");
     } catch (string fail) {
         cout << fail << endl;
     }
     cout << *m << endl;
     try {
-        solve(*m);
+        *m = solve(*m);
     }
     catch (string fail) {
         cout << fail << endl;
     }
     cout << endl << "--------------------" << endl << endl << endl;
     cout << *m << endl;
-
 
     return 0;
 }

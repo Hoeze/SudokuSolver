@@ -23,6 +23,15 @@ ostream &operator<<(ostream &os, Matrix &m) {
     return os;
 }
 
+string Matrix::str() {
+    stringstream ss;
+    ss << *this << endl;
+
+    cout << ss.str();
+
+    return ss.str();
+}
+
 void readFileToMatrix(Matrix &m, string filename) {
     ifstream infile(filename);
     if (infile.fail()) {
@@ -122,6 +131,7 @@ Matrix *BitMatrix::copy() {
             retval->storage[x][y] = this->storage[x][y];
         }
     }
+    // TODO!!!!!!!! intersect instead of merge
     retval->unsetSpots.merge(this->unsetSpots);
     return retval;
 }
