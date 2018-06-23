@@ -102,7 +102,7 @@ void solveKnown(Matrix &m) {
     delete (toVisit);
 }
 
-Matrix &solve(Matrix &m) {
+Matrix *solve(Matrix &m) {
     try {
         solveKnown(m);
     }
@@ -111,45 +111,53 @@ Matrix &solve(Matrix &m) {
     }
 
     if (!m.getUnsetSpots().empty()) {
-        cout << "Unset Spots" << endl;
         Coordinate c = *m.getUnsetSpots().begin();
         vector<int> possibleNumbers = m.getPossibleNumbers(c.x, c.y);
         for (int i: possibleNumbers) {
             Matrix *temp = m.copy();
+
             temp->setExclusiveNumber(c.x, c.y, i);
             try {
-                *temp = solve(*temp);
+                temp = solve(*temp);
             }
             catch (NoPossibilitiesException &e) {
                 m.removeNumber(c.x, c.y, i);
                 delete (temp);
                 continue;
             }
-            return *temp;
+            return temp;
         }
         throw NoPossibilitiesException(c.x, c.y);
     } else {
-        return m;
+        return &m;
     }
 }
 
-int main() {
+void solveFile(string file){
+    cout << "========= Solving " << file << " =========" << endl << endl;
     Matrix *m = new BitMatrix();
 
     try {
-        readFileToMatrix(*m, "Sudoku_schwer.txt");
+        readFileToMatrix(*m, file);
     } catch (string fail) {
         cout << fail << endl;
     }
     cout << *m << endl;
     try {
-        *m = solve(*m);
+        m = solve(*m);
     }
     catch (string fail) {
         cout << fail << endl;
     }
-    cout << endl << "--------------------" << endl << endl << endl;
+    cout << "| | | | | | | | | |" << endl;
+    cout << "v v v v v v v v v v" << endl << endl << endl;
     cout << *m << endl;
+}
+
+int main() {
+    solveFile("Sudoku_leicht.txt");
+    solveFile("Sudoku_schwer.txt");
+    solveFile("Sudoku_nonsense.txt");
 
     return 0;
 }

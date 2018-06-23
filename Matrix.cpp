@@ -3,6 +3,7 @@
 //
 
 #include "Matrix.h"
+#include <array>
 
 ostream &operator<<(ostream &os, Matrix &m) {
     for (int row = 0; row < ROWNUM; row++) {
@@ -27,7 +28,7 @@ string Matrix::str() {
     stringstream ss;
     ss << *this << endl;
 
-    cout << ss.str();
+//    cout << ss.str();
 
     return ss.str();
 }
@@ -126,13 +127,16 @@ set<Coordinate> BitMatrix::getSetSpots() {
 
 Matrix *BitMatrix::copy() {
     BitMatrix *retval = new BitMatrix();
-    for (int x = 1; x <= 9; x++) {
-        for (int y = 1; y <= 9; y++) {
+    for (int x = 0; x < 9; x++) {
+        for (int y = 0; y < 9; y++) {
             retval->storage[x][y] = this->storage[x][y];
         }
     }
-    // TODO!!!!!!!! intersect instead of merge
-    retval->unsetSpots.merge(this->unsetSpots);
+    retval->setSpots.merge(this->setSpots);
+    retval->unsetSpots.clear();
+    for (Coordinate c : this->unsetSpots) {
+        retval->unsetSpots.insert(c);
+    }
     return retval;
 }
 

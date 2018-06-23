@@ -69,6 +69,7 @@ public:
     virtual Matrix *copy()=0;
 
     string str();
+
 };
 
 void readFileToMatrix(Matrix &m, string filename);
